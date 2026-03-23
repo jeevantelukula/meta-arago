@@ -221,9 +221,10 @@ tisdk_image_build () {
     for spl_name in ${DEPLOY_SPL_NAME}
     do
         # Copy the SPL image if it exists
-        if [ -e ${DEPLOY_DIR_IMAGE}/$spl_name ]
+        set -- ${DEPLOY_DIR_IMAGE}/$spl_name
+        if [ -e "$1" ]
         then
-            cp ${DEPLOY_DIR_IMAGE}/$spl_name ${prebuilt_dir}/
+            cp "$@" ${prebuilt_dir}/
         else
             echo "Could not find the SPL image \"$spl_name\""
             return 1
@@ -232,9 +233,10 @@ tisdk_image_build () {
 
     for image_name in ${DEPLOY_IMAGES_NAME}
     do
-        if [ -e ${DEPLOY_DIR_IMAGE}/$image_name ]
+        set -- ${DEPLOY_DIR_IMAGE}/$image_name
+        if [ -e "$1" ]
         then
-            cp ${DEPLOY_DIR_IMAGE}/$image_name ${prebuilt_dir}/
+            cp "$@" ${prebuilt_dir}/
         else
             echo "Could not find image \"$image_name\""
             return 1
@@ -257,6 +259,33 @@ tisdk_image_build () {
         then
             cp ${DEPLOY_DIR_IMAGE}/${DEPLOY_TISCI_FW_NAME} ${prebuilt_dir}/
         fi
+    fi
+
+    # Copy ti-sysfw needed by binman builds for u-boot
+    if [ -d "${DEPLOY_DIR_IMAGE}/ti-sysfw" ] && [ -n "${SYSFW_BINARY}" ]
+    then
+        mkdir -p ${prebuilt_dir}/ti-sysfw/
+        for firmware_name in ${SYSFW_BINARY}
+        do
+            set -- ${DEPLOY_DIR_IMAGE}/ti-sysfw/$firmware_name
+            if [ -e "$1" ]
+            then
+                cp "$@" ${prebuilt_dir}/ti-sysfw/
+            fi
+        done
+    fi
+
+    # Copy ti-dm needed by binman builds for u-boot
+    if [ -d "${DEPLOY_DIR_IMAGE}/ti-dm" ]
+    then
+        cp -r ${DEPLOY_DIR_IMAGE}/ti-dm ${prebuilt_dir}/
+    fi
+
+    # Copy ti-hsm needed by binman builds for u-boot
+    if [ -d "${DEPLOY_DIR_IMAGE}/ti-hsm" ]
+    then
+        mkdir -p ${prebuilt_dir}/ti-hsm/
+        cp ${DEPLOY_DIR_IMAGE}/ti-hsm/* ${prebuilt_dir}/ti-hsm/
     fi
 
     # Add the EXTRA_TISDK_FILES contents if they exist
